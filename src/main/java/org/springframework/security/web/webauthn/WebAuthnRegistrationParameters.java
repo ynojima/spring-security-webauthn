@@ -1,15 +1,12 @@
 package org.springframework.security.web.webauthn;
 
-import java.io.Serializable;
-
 /**
  * @author Rob Winch
  */
-public class ServerLoginParameters implements Serializable {
-
+public class WebAuthnRegistrationParameters {
 	private byte[] challenge;
 
-	private byte[] credentialId;
+	private byte[] userId;
 
 	private boolean userVerificationRequired;
 
@@ -21,12 +18,12 @@ public class ServerLoginParameters implements Serializable {
 		this.challenge = challenge;
 	}
 
-	public byte[] getCredentialId() {
-		return this.credentialId;
+	public byte[] getUserId() {
+		return this.userId;
 	}
 
-	public void setCredentialId(byte[] credentialId) {
-		this.credentialId = credentialId;
+	public void setUserId(byte[] userId) {
+		this.userId = userId;
 	}
 
 	public boolean isUserVerificationRequired() {

@@ -1,13 +1,5 @@
 package org.springframework.security.web.webauthn;
 
-import com.webauthn4j.authenticator.Authenticator;
-import com.webauthn4j.data.WebAuthnAuthenticationContext;
-import com.webauthn4j.data.client.Origin;
-import com.webauthn4j.data.client.challenge.Challenge;
-import com.webauthn4j.data.client.challenge.DefaultChallenge;
-import com.webauthn4j.server.ServerProperty;
-import com.webauthn4j.validator.WebAuthnAuthenticationContextValidationResponse;
-import com.webauthn4j.validator.WebAuthnAuthenticationContextValidator;
 import example.webauthn.security.MultiFactorAuthentication;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -47,7 +39,7 @@ public class WebAuthnLoginFilter extends AbstractAuthenticationProcessingFilter 
 		byte[] authenticatorDataBytes = bytes(request, "authenticatorData");
 		byte[] signatureBytes = bytes(request, "signature");
 
-		ServerLoginParameters loginParams = this.requests
+		WebAuthnLoginParameters loginParams = this.requests
 				.loadLoginParams(request);
 
 		WebAuthnLoginRequest loginRequest = new WebAuthnLoginRequest();

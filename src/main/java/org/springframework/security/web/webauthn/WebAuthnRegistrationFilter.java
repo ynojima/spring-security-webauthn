@@ -12,7 +12,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.net.URI;
 import java.net.URL;
 
 /**
@@ -56,11 +55,11 @@ public class WebAuthnRegistrationFilter extends OncePerRequestFilter {
 		byte[] clientDataJSONBytes = Base64Utils.decodeFromUrlSafeString(clientDataJSON);
 		byte[] attestationObjectBytes = Base64Utils.decodeFromUrlSafeString(attestationObject);
 
-		ServerRegistrationParameters parameters = this.webAuthnRequests.loadRegistrationParams(request);
+		WebAuthnRegistrationParameters parameters = this.webAuthnRequests.loadRegistrationParams(request);
 		AuthenticatorAttestationResponse authenticatorResponse = new AuthenticatorAttestationResponse();
 		authenticatorResponse.setAttestationObject(attestationObjectBytes);
 		authenticatorResponse.setClientDataJSON(clientDataJSONBytes);
-		RegistrationRequest registration = new RegistrationRequest();
+		WebAuthnRegistrationRequest registration = new WebAuthnRegistrationRequest();
 		registration.setResponse(authenticatorResponse);
 		registration.setParameters(parameters);
 		registration.setOrigin(new URL(request.getRequestURL().toString()));

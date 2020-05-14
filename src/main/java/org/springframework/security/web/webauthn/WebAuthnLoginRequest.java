@@ -12,7 +12,7 @@ public class WebAuthnLoginRequest {
 	private byte[] clientDataJSON;
 	private byte[] authenticatorData;
 	private byte[] signature;
-	private ServerLoginParameters loginParameters;
+	private WebAuthnLoginParameters loginParameters;
 	private URL origin;
 	private Authentication authentication;
 
@@ -48,11 +48,11 @@ public class WebAuthnLoginRequest {
 		this.signature = signature;
 	}
 
-	public ServerLoginParameters getLoginParameters() {
+	public WebAuthnLoginParameters getLoginParameters() {
 		return this.loginParameters;
 	}
 
-	public void setLoginParameters(ServerLoginParameters loginParameters) {
+	public void setLoginParameters(WebAuthnLoginParameters loginParameters) {
 		this.loginParameters = loginParameters;
 	}
 

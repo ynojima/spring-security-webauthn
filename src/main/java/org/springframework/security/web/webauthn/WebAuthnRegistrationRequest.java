@@ -5,11 +5,11 @@ import java.net.URL;
 /**
  * @author Rob Winch
  */
-public class RegistrationRequest {
+public class WebAuthnRegistrationRequest {
 
 	private AuthenticatorAttestationResponse response;
 
-	private ServerRegistrationParameters parameters;
+	private WebAuthnRegistrationParameters parameters;
 
 	private URL origin;
 
@@ -21,11 +21,11 @@ public class RegistrationRequest {
 		this.origin = origin;
 	}
 
-	public ServerRegistrationParameters getParameters() {
+	public WebAuthnRegistrationParameters getParameters() {
 		return this.parameters;
 	}
 
-	public void setParameters(ServerRegistrationParameters parameters) {
+	public void setParameters(WebAuthnRegistrationParameters parameters) {
 		this.parameters = parameters;
 	}
 

@@ -62,7 +62,7 @@ public class DefaultWebAuthnRegistrationGeneratingFilter extends OncePerRequestF
 
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		response.setContentType("text/html;charset=UTF-8");
-		ServerRegistrationParameters params = this.manager
+		WebAuthnRegistrationParameters params = this.manager
 				.createRegistrationParametersFor(authentication);
 		this.webAuthnRequests.saveRegistrationParams(request, response, params);
 		response.getWriter().write("<!DOCTYPE html>\n"

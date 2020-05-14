@@ -44,19 +44,19 @@ public class WebAuthnManager {
 		this.authenticators = authenticators;
 	}
 
-	public ServerRegistrationParameters createRegistrationParametersFor(Authentication authentication) {
-		ServerRegistrationParameters result = new ServerRegistrationParameters();
+	public WebAuthnRegistrationParameters createRegistrationParametersFor(Authentication authentication) {
+		WebAuthnRegistrationParameters result = new WebAuthnRegistrationParameters();
 		result.setChallenge(randomBytes());
 		result.setUserId(userId(authentication));
 		return result;
 	}
 
 	// FIXME: This should return a registration (should not do any saving in the manager)
-	public void register(RegistrationRequest request) {
+	public void register(WebAuthnRegistrationRequest request) {
 		// Server properties
 		Origin origin = new Origin(request.getOrigin().toExternalForm()); /* set origin */;
 		String rpId = origin.getHost();
-		ServerRegistrationParameters registrationParameters = request.getParameters();
+		WebAuthnRegistrationParameters registrationParameters = request.getParameters();
 		byte[] base64Challenge = registrationParameters.getChallenge();
 		byte[] attestationObject = request.getResponse().getAttestationObject();
 		byte[] clientDataJSON = request.getResponse().getClientDataJSON();
@@ -83,9 +83,9 @@ public class WebAuthnManager {
 		this.authenticators.save(authentication, request.getResponse());
 	}
 
-	public ServerLoginParameters createLoginParametersFor(Authentication authentication) {
+	public WebAuthnLoginParameters createLoginParametersFor(Authentication authentication) {
 		Authenticator authenticator = load(authentication);
-		ServerLoginParameters result = new ServerLoginParameters();
+		WebAuthnLoginParameters result = new WebAuthnLoginParameters();
 		result.setChallenge(randomBytes());
 		result.setCredentialId(authenticator.getAttestedCredentialData().getCredentialId());
 		return result;

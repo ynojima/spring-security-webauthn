@@ -1,6 +1,5 @@
 package org.springframework.security.web.webauthn;
 
-import com.webauthn4j.authenticator.Authenticator;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
@@ -63,7 +62,7 @@ public class DefaultWebAuthnLoginPageGeneratingFilter extends OncePerRequestFilt
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		response.setContentType("text/html;charset=UTF-8");
 
-		ServerLoginParameters params = this.manager.createLoginParametersFor(authentication);
+		WebAuthnLoginParameters params = this.manager.createLoginParametersFor(authentication);
 		String challenge = Base64Utils.encodeToUrlSafeString(params.getChallenge());
 		this.paramsRepository.saveLoginParams(request, response, params);
 		String credentialId = Base64Utils

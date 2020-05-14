@@ -12,19 +12,19 @@ public class WebAuthnParamsRepository {
 
 	private String loginParamsAttrName = "loginParamsAttr";
 
-	public void saveRegistrationParams(HttpServletRequest request, HttpServletResponse response, ServerRegistrationParameters params) {
+	public void saveRegistrationParams(HttpServletRequest request, HttpServletResponse response, WebAuthnRegistrationParameters params) {
 		request.getSession().setAttribute(this.registrationParamsAttrName, params);
 	}
 
-	public ServerRegistrationParameters loadRegistrationParams(HttpServletRequest request) {
-		return (ServerRegistrationParameters) request.getSession().getAttribute(this.registrationParamsAttrName);
+	public WebAuthnRegistrationParameters loadRegistrationParams(HttpServletRequest request) {
+		return (WebAuthnRegistrationParameters) request.getSession().getAttribute(this.registrationParamsAttrName);
 	}
 
-	public void saveLoginParams(HttpServletRequest request, HttpServletResponse response, ServerLoginParameters params) {
+	public void saveLoginParams(HttpServletRequest request, HttpServletResponse response, WebAuthnLoginParameters params) {
 		request.getSession().setAttribute(this.loginParamsAttrName, params);
 	}
 
-	public ServerLoginParameters loadLoginParams(HttpServletRequest request) {
-		return (ServerLoginParameters) request.getSession().getAttribute(this.loginParamsAttrName);
+	public WebAuthnLoginParameters loadLoginParams(HttpServletRequest request) {
+		return (WebAuthnLoginParameters) request.getSession().getAttribute(this.loginParamsAttrName);
 	}
 }

@@ -40,7 +40,7 @@
         <dependency>
             <groupId>com.webauthn4j</groupId>
             <artifactId>webauthn4j-core</artifactId>
-            <version>0.9.14.RELEASE</version>
+            <version>0.11.1.RELEASE</version>
         </dependency>
 
         <dependency>

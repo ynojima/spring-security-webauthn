@@ -1,13 +1,14 @@
 package org.springframework.security.web.webauthn;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.webauthn4j.authenticator.Authenticator;
 import com.webauthn4j.authenticator.AuthenticatorImpl;
 import com.webauthn4j.converter.AttestationObjectConverter;
 import com.webauthn4j.converter.CollectedClientDataConverter;
 import com.webauthn4j.converter.util.CborConverter;
 import com.webauthn4j.converter.util.JsonConverter;
-import com.webauthn4j.data.WebAuthnAuthenticationContext;
-import com.webauthn4j.data.WebAuthnRegistrationContext;
+import com.webauthn4j.converter.util.ObjectConverter;
+import com.webauthn4j.data.*;
 import com.webauthn4j.data.attestation.AttestationObject;
 import com.webauthn4j.data.attestation.authenticator.AuthenticatorData;
 import com.webauthn4j.data.client.CollectedClientData;
@@ -16,10 +17,6 @@ import com.webauthn4j.data.client.challenge.Challenge;
 import com.webauthn4j.data.client.challenge.DefaultChallenge;
 import com.webauthn4j.data.extension.authenticator.RegistrationExtensionAuthenticatorOutput;
 import com.webauthn4j.server.ServerProperty;
-import com.webauthn4j.validator.WebAuthnAuthenticationContextValidationResponse;
-import com.webauthn4j.validator.WebAuthnAuthenticationContextValidator;
-import com.webauthn4j.validator.WebAuthnRegistrationContextValidationResponse;
-import com.webauthn4j.validator.WebAuthnRegistrationContextValidator;
 import example.webauthn.security.WebAuthnAuthenticatorRepository;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -35,6 +32,13 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class WebAuthnManager {
 	private SecureRandom random = new SecureRandom();
+
+	private ObjectConverter objectConverter = new ObjectConverter();
+	// com.webauthn4j.WebAuthnManager.createNonStrictWebAuthnManager() returns a com.webauthn4j.WebAuthnManager instance
+	// which doesn't validate an attestation statement. It is recommended configuration for most web application.
+	// If you are building enterprise web application and need to validate the attestation statement, use the constructor of
+	// WebAuthnRegistrationContextValidator and provide validators you like
+	private com.webauthn4j.WebAuthnManager webAuthnManager = com.webauthn4j.WebAuthnManager.createNonStrictWebAuthnManager(this.objectConverter);
 
 	private Map<String, byte[]> usernameToUserId = new ConcurrentHashMap<>();
 
@@ -53,30 +57,24 @@ public class WebAuthnManager {
 
 	// FIXME: This should return a registration (should not do any saving in the manager)
 	public void register(WebAuthnRegistrationRequest request) {
+		WebAuthnRegistrationParameters webAuthnRegistrationParameters = request.getParameters();
+		byte[] attestationObject = request.getResponse().getAttestationObject();
+		byte[] clientDataJSON = request.getResponse().getClientDataJSON();
+
 		// Server properties
 		Origin origin = new Origin(request.getOrigin().toExternalForm()); /* set origin */;
 		String rpId = origin.getHost();
-		WebAuthnRegistrationParameters registrationParameters = request.getParameters();
-		byte[] base64Challenge = registrationParameters.getChallenge();
-		byte[] attestationObject = request.getResponse().getAttestationObject();
-		byte[] clientDataJSON = request.getResponse().getClientDataJSON();
+		byte[] base64Challenge = webAuthnRegistrationParameters.getChallenge();
 		Challenge challenge = new DefaultChallenge(base64Challenge);
 		// FIXME: should populate this
 		byte[] tokenBindingId = null /* set tokenBindingId */;
 		ServerProperty serverProperty = new ServerProperty(origin, rpId, challenge, tokenBindingId);
-		boolean userVerificationRequired = registrationParameters.isUserVerificationRequired();
+		boolean userVerificationRequired = webAuthnRegistrationParameters.isUserVerificationRequired();
 
-		WebAuthnRegistrationContext registrationContext = new WebAuthnRegistrationContext(clientDataJSON, attestationObject, serverProperty, userVerificationRequired);
+		RegistrationRequest registrationRequest = new RegistrationRequest(attestationObject, clientDataJSON);
+		RegistrationParameters registrationParameters = new RegistrationParameters(serverProperty, userVerificationRequired);
 
-		// WebAuthnRegistrationContextValidator.createNonStrictRegistrationContextValidator() returns a WebAuthnRegistrationContextValidator instance
-		// which doesn't validate an attestation statement. It is recommended configuration for most web application.
-		// If you are building enterprise web application and need to validate the attestation statement, use the constructor of
-		// WebAuthnRegistrationContextValidator and provide validators you like
-		WebAuthnRegistrationContextValidator webAuthnRegistrationContextValidator =
-				WebAuthnRegistrationContextValidator.createNonStrictRegistrationContextValidator();
-
-
-		WebAuthnRegistrationContextValidationResponse registration = webAuthnRegistrationContextValidator.validate(registrationContext);
+		this.webAuthnManager.validate(registrationRequest, registrationParameters);
 
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		// FIXME: should save something w/ a counter on it
@@ -110,27 +108,17 @@ public class WebAuthnManager {
 		ServerProperty serverProperty = new ServerProperty(origin, rpId, challenge, tokenBindingId);
 		boolean userVerificationRequired = false;
 
-		WebAuthnAuthenticationContext authenticationContext =
-				new WebAuthnAuthenticationContext(
-						request.getCredentialId(),
-						request.getClientDataJSON(),
-						request.getAuthenticatorData(),
-						request.getSignature(),
-						serverProperty,
-						userVerificationRequired
-				);
+		AuthenticationRequest authenticationRequest = new AuthenticationRequest(
+				request.getCredentialId(),
+				request.getAuthenticatorData(),
+				request.getClientDataJSON(),
+				request.getSignature()
+		);
+		AuthenticationParameters authenticationParameters = new AuthenticationParameters(serverProperty, authenticator, userVerificationRequired);
 
-		WebAuthnAuthenticationContextValidator webAuthnAuthenticationContextValidator =
-				new WebAuthnAuthenticationContextValidator();
+		AuthenticationData authenticationData = this.webAuthnManager.validate(authenticationRequest, authenticationParameters);
 
-		WebAuthnAuthenticationContextValidationResponse webauthnResponse = webAuthnAuthenticationContextValidator.validate(authenticationContext, authenticator);
-
-		// please update the counter of the authenticator record
-		//		updateCounter(
-		//				response.getAuthenticatorData().getAttestedCredentialData().getCredentialId(),
-		//				response.getAuthenticatorData().getSignCount()
-		//		);
-		authenticator.setCounter(webauthnResponse.getAuthenticatorData().getSignCount());
+		authenticator.setCounter(authenticationData.getAuthenticatorData().getSignCount());
 	}
 
 	private Authenticator load(Authentication authentication) {
@@ -138,8 +126,8 @@ public class WebAuthnManager {
 		if (response == null) {
 			return null;
 		}
-		CollectedClientDataConverter collectedClientDataConverter = new CollectedClientDataConverter(new JsonConverter());
-		AttestationObjectConverter attestationObjectConverter = new AttestationObjectConverter(new CborConverter());
+		CollectedClientDataConverter collectedClientDataConverter = new CollectedClientDataConverter(this.objectConverter);
+		AttestationObjectConverter attestationObjectConverter = new AttestationObjectConverter(this.objectConverter);
 
 		CollectedClientData collectedClientData = collectedClientDataConverter.convert(response.getClientDataJSON());
 		AttestationObject attestationObject = attestationObjectConverter.convert(response.getAttestationObject());

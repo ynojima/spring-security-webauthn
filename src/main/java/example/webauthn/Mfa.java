@@ -1,6 +1,5 @@
 package example.webauthn;
 
-import com.webauthn4j.authenticator.Authenticator;
 import example.webauthn.security.MultiFactorAuthentication;
 import example.webauthn.security.MultiFactorAuthenticationRequiredException;
 import example.webauthn.security.MultiFactorRegistrationRequiredException;
